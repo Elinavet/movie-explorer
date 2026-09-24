@@ -27,7 +27,7 @@ const searchMovies = async (query)=>{
     const movieDate = document.createElement("p");
     movieDate.innerText = movie.release_date.slice(0, 4)
     const movieRating = document.createElement("p");
-    movieRating.innerText = movie.vote_average
+    movieRating.innerText = `⭐ ${movie.vote_average.toFixed(1)}`
     const moviePoster = document.createElement("img");
     moviePoster.src = `https://image.tmdb.org/t/p/w500${movie.poster_path}`
     

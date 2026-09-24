@@ -35,3 +35,39 @@ button {
   font-size: 15px;
   cursor: pointer;
 }
+
+#movie-results {
+  display:grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 15px;
+  margin: 30px;
+}
+
+#movie-results div {
+  border: 3px solid #caba05a4;
+  border-radius: 10px;
+  padding: 5px;
+  text-align: center;
+  cursor: pointer;
+  transition: transform 0.3s ease;
+}
+
+#movie-results div:hover {
+  transform: scale(0.95);
+}
+
+#movie-results img {
+  width: 200px;
+}
+
+#movie-results p {
+  margin: 5px 0;
+  color: rgba(152, 87, 7, 0.528);
+  font-size: 17px;
+}
+
+#movie-results h2 {
+  color: rgb(120, 107, 11);
+  font-family:Georgia, 'Times New Roman', Times, serif;
+  font-size: 20px;
+}
