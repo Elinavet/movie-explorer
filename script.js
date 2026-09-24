@@ -4,8 +4,13 @@ const movieResults = document.getElementById("movie-results")
 
 searchForm.addEventListener("submit", (event) => {
   event.preventDefault()
-  const query = searchInput.value
-searchMovies(query)
+  const query = searchInput.value.trim()
+  if(query === ""){
+    movieResults.innerText = "Please enter a movie title."
+    return
+  }
+  movieResults.innerText = "Searching...";
+  searchMovies(query)
 })
 
 const searchMovies = async (query)=>{
