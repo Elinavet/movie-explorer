@@ -87,8 +87,13 @@ const getMovieDetails = async (movieId)=>{
 
     movieDetails.innerHTML = "";
 
+    const detailsContent = document.createElement("div");
+    detailsContent.id = "details-content";
+    const detailsInfo = document.createElement("div");
+    detailsInfo.id = "details-info";
+
     const backButton = document.createElement("button")
-    backButton.innerText = "Back"
+    backButton.innerText = "<-Back"
     backButton.addEventListener("click", ()=>{
       movieDetails.style.display = "none";
       movieResults.style.display = "grid";
@@ -125,13 +130,15 @@ const getMovieDetails = async (movieId)=>{
     }
     
     movieDetails.appendChild(backButton)
-    movieDetails.appendChild(detailsTitle)
-    movieDetails.appendChild(detailsOverview)
-    movieDetails.appendChild(detailsRuntime)
-    movieDetails.appendChild(detailsGenres)
-    movieDetails.appendChild(detailsRating)
-    movieDetails.appendChild(detailsLanguage)
-    movieDetails.appendChild(detailsPoster)
+    movieDetails.appendChild(detailsContent)
+    detailsContent.appendChild(detailsPoster)
+    detailsContent.appendChild(detailsInfo)
+    detailsInfo.appendChild(detailsTitle)
+    detailsInfo.appendChild(detailsOverview)
+    detailsInfo.appendChild(detailsRuntime)
+    detailsInfo.appendChild(detailsGenres)
+    detailsInfo.appendChild(detailsRating)
+    detailsInfo.appendChild(detailsLanguage)
   }catch(error){
     console.log(error)
   }
