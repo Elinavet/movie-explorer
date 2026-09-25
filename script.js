@@ -30,12 +30,32 @@ const searchForm = document.getElementById("search-form")
 const searchInput = document.getElementById("search-input")
 const movieResults = document.getElementById("movie-results")
 const movieDetails = document.getElementById("movie-details")
+const favouritesButton = document.getElementById("favourites-button")
 let favourites = [];
 
 const savedFavourites = localStorage.getItem("favourites");
 if (savedFavourites !== null) {
   favourites = JSON.parse(savedFavourites);
 }
+
+favouritesButton.addEventListener("click", () => {
+  movieResults.innerHTML = "";
+  if (favourites.length === 0) {
+    movieResults.innerText = "No favourite movies yet.";
+    return;
+}
+
+  favourites.forEach((movie) => {
+    const myMovie = new Movie(
+      movie.id,
+      movie.title,
+      movie.releaseDate,
+      movie.rating,
+      movie.posterPath
+    );
+    renderMovieCard(myMovie, true);
+  });
+});
 
 
 searchForm.addEventListener("submit", (event) => {
@@ -76,14 +96,22 @@ const searchMovies = async (query)=>{
         movie.release_date,
         movie.vote_average,
         movie.poster_path
-    );
-    
-      const movieCard = document.createElement("div");
-      movieCard.addEventListener("click", () => {
-        getMovieDetails(myMovie.id)
-      })
-      
-      const movieTitle = document.createElement("h2");
+    );  
+    renderMovieCard(myMovie)  
+    });
+  }
+  }catch(error){
+    console.error(error);
+    movieResults.innerText = "Something went wrong.";
+  }  
+}
+
+const renderMovieCard =(myMovie, isFavouritesView = false)=>{
+  const movieCard = document.createElement("div");
+  movieCard.addEventListener("click", () => {
+    getMovieDetails(myMovie.id)
+  })
+  const movieTitle = document.createElement("h2");
       movieTitle.innerText = myMovie.title
       const movieDate = document.createElement("p");
       movieDate.innerText = myMovie.getYear()
@@ -115,6 +143,12 @@ const searchMovies = async (query)=>{
         }else{
           favourites = favourites.filter(movie => movie.id !== myMovie.id);
           favouriteButton.innerText = "♡"
+          if(isFavouritesView){
+            movieCard.remove();
+            if (favourites.length === 0) {
+              movieResults.innerText = "No favourite movies yet.";
+              return;}
+          }
         }
         localStorage.setItem("favourites", JSON.stringify(favourites));
         
@@ -126,12 +160,6 @@ const searchMovies = async (query)=>{
       movieCard.appendChild(movieDate);
       movieCard.appendChild(favouriteButton);
       movieResults.appendChild(movieCard)
-    });
-  }
-  }catch(error){
-    console.error(error);
-    movieResults.innerText = "Something went wrong.";
-  }  
 }
 
 const getMovieDetails = async (movieId)=>{
