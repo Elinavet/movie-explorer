@@ -1,6 +1,8 @@
 const searchForm = document.getElementById("search-form")
 const searchInput = document.getElementById("search-input")
 const movieResults = document.getElementById("movie-results")
+const movieDetails = document.getElementById("movie-details")
+
 
 searchForm.addEventListener("submit", (event) => {
   event.preventDefault()
@@ -34,7 +36,11 @@ const searchMovies = async (query)=>{
     movieResults.innerText = "No movies found.";
   } else {
     data.results.forEach(movie => {
-      const movieCard = document.createElement("div")
+      const movieCard = document.createElement("div");
+      movieCard.addEventListener("click", () => {
+        getMovieDetails(movie.id)
+      })
+      
       const movieTitle = document.createElement("h2");
       movieTitle.innerText = movie.title
       const movieDate = document.createElement("p");
@@ -64,8 +70,70 @@ const searchMovies = async (query)=>{
   }catch(error){
     console.error(error);
     movieResults.innerText = "Something went wrong.";
+  }  
+}
+
+const getMovieDetails = async (movieId)=>{
+  try{
+    const response = await fetch(`https://api.themoviedb.org/3/movie/${movieId}`,{
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${API_TOKEN}`
+      }
+    })
+    const data = await response.json()
+    movieResults.style.display = "none";
+    movieDetails.style.display = "block";
+
+    movieDetails.innerHTML = "";
+
+    const backButton = document.createElement("button")
+    backButton.innerText = "Back"
+    backButton.addEventListener("click", ()=>{
+      movieDetails.style.display = "none";
+      movieResults.style.display = "grid";
+    })
+
+    const detailsTitle = document.createElement("h2");
+    detailsTitle.innerText = data.title
+
+    const detailsOverview = document.createElement("p");
+    detailsOverview.innerText = data.overview
+    if(data.overview === ""){
+      detailsOverview.innerText = "No overview available."
+    }else{
+      detailsOverview.innerText = data.overview
+    }
+
+    const detailsRuntime = document.createElement("p")
+    detailsRuntime.innerText = `Runtime: ${data.runtime} minutes`
+
+    const detailsGenres = document.createElement("p")
+    detailsGenres.innerText = `Genres: ${data.genres.map(genre => genre.name).join(", ")}`
+
+    const detailsRating = document.createElement("p")
+    detailsRating.innerText = `⭐${data.vote_average.toFixed(1)}/10`
+
+    const detailsLanguage = document.createElement("p")
+    detailsLanguage.innerText = `Language: ${data.original_language}`
+
+    const detailsPoster = document.createElement("img");
+    if (data.poster_path !== null) {
+      detailsPoster.src = `https://image.tmdb.org/t/p/w500${data.poster_path}`;  
+    }else{
+      detailsPoster.src = ".//images/img placeholder.png"
+    }
+    
+    movieDetails.appendChild(backButton)
+    movieDetails.appendChild(detailsTitle)
+    movieDetails.appendChild(detailsOverview)
+    movieDetails.appendChild(detailsRuntime)
+    movieDetails.appendChild(detailsGenres)
+    movieDetails.appendChild(detailsRating)
+    movieDetails.appendChild(detailsLanguage)
+    movieDetails.appendChild(detailsPoster)
+  }catch(error){
+    console.log(error)
   }
-  
-  
 }
 
