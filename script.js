@@ -1,3 +1,14 @@
+class Movie {
+  constructor(id, title, releaseDate, rating, posterPath) {
+    this.id = id;
+    this.title = title;
+    this.releaseDate = releaseDate;
+    this.rating = rating;
+    this.posterPath = posterPath;
+  }
+}
+
+
 const searchForm = document.getElementById("search-form")
 const searchInput = document.getElementById("search-input")
 const movieResults = document.getElementById("movie-results")
@@ -36,26 +47,34 @@ const searchMovies = async (query)=>{
     movieResults.innerText = "No movies found.";
   } else {
     data.results.forEach(movie => {
+      const myMovie = new Movie(
+        movie.id,
+        movie.title,
+        movie.release_date,
+        movie.vote_average,
+        movie.poster_path
+    );
+    
       const movieCard = document.createElement("div");
       movieCard.addEventListener("click", () => {
-        getMovieDetails(movie.id)
+        getMovieDetails(myMovie.id)
       })
       
       const movieTitle = document.createElement("h2");
-      movieTitle.innerText = movie.title
+      movieTitle.innerText = myMovie.title
       const movieDate = document.createElement("p");
-      if (movie.release_date !== "") {
-        movieDate.innerText = movie.release_date.slice(0, 4);
+      if (myMovie.releaseDate !== "") {
+        movieDate.innerText = myMovie.releaseDate.slice(0, 4);
       } else {
         movieDate.innerText = "Release date unknown";
       }
 
       const movieRating = document.createElement("p");
-      movieRating.innerText = `⭐ ${movie.vote_average.toFixed(1)}`
+      movieRating.innerText = `⭐ ${myMovie.rating.toFixed(1)}`
 
       const moviePoster = document.createElement("img");
-      if (movie.poster_path !== null) {
-        moviePoster.src = `https://image.tmdb.org/t/p/w500${movie.poster_path}`;  
+      if (myMovie.posterPath !== null) {
+        moviePoster.src = `https://image.tmdb.org/t/p/w500${myMovie.posterPath}`;  
       }else{
         moviePoster.src = ".//images/img placeholder.png"
       }
