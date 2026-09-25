@@ -6,6 +6,23 @@ class Movie {
     this.rating = rating;
     this.posterPath = posterPath;
   }
+  getYear(){
+    if (this.releaseDate !== "") {
+      return this.releaseDate.slice(0, 4);
+    } else {
+      return "Release date unknown";
+    }
+  }
+  getPosterUrl(){
+    if (this.posterPath !== null) {
+      return `https://image.tmdb.org/t/p/w500${this.posterPath}`;  
+    }else{
+      return ".//images/img placeholder.png"
+    }
+  }
+  getRating() {
+    return `⭐ ${this.rating.toFixed(1)}`
+  }
 }
 
 
@@ -63,21 +80,14 @@ const searchMovies = async (query)=>{
       const movieTitle = document.createElement("h2");
       movieTitle.innerText = myMovie.title
       const movieDate = document.createElement("p");
-      if (myMovie.releaseDate !== "") {
-        movieDate.innerText = myMovie.releaseDate.slice(0, 4);
-      } else {
-        movieDate.innerText = "Release date unknown";
-      }
+      movieDate.innerText = myMovie.getYear()
+      
 
       const movieRating = document.createElement("p");
-      movieRating.innerText = `⭐ ${myMovie.rating.toFixed(1)}`
+      movieRating.innerText = myMovie.getRating()
 
       const moviePoster = document.createElement("img");
-      if (myMovie.posterPath !== null) {
-        moviePoster.src = `https://image.tmdb.org/t/p/w500${myMovie.posterPath}`;  
-      }else{
-        moviePoster.src = ".//images/img placeholder.png"
-      }
+      moviePoster.src = myMovie.getPosterUrl();
       
       movieCard.appendChild(moviePoster)
       movieCard.appendChild(movieRating)
