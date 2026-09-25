@@ -30,6 +30,12 @@ const searchForm = document.getElementById("search-form")
 const searchInput = document.getElementById("search-input")
 const movieResults = document.getElementById("movie-results")
 const movieDetails = document.getElementById("movie-details")
+let favourites = [];
+
+const savedFavourites = localStorage.getItem("favourites");
+if (savedFavourites !== null) {
+  favourites = JSON.parse(savedFavourites);
+}
 
 
 searchForm.addEventListener("submit", (event) => {
@@ -89,10 +95,36 @@ const searchMovies = async (query)=>{
       const moviePoster = document.createElement("img");
       moviePoster.src = myMovie.getPosterUrl();
       
+      const favouriteButton = document.createElement("button");
+
+      const existingFavourite = favourites.find(
+        movie => movie.id === myMovie.id
+      );
+    
+      if (existingFavourite) {
+        favouriteButton.innerText = "♥";
+      } else {
+        favouriteButton.innerText = "♡";
+      }
+      favouriteButton.addEventListener("click", (event) => {
+        event.stopPropagation();
+        const existingMovie = favourites.find(movie => movie.id === myMovie.id);
+        if(!existingMovie){
+          favourites.push(myMovie);
+          favouriteButton.innerText = "♥"
+        }else{
+          favourites = favourites.filter(movie => movie.id !== myMovie.id);
+          favouriteButton.innerText = "♡"
+        }
+        localStorage.setItem("favourites", JSON.stringify(favourites));
+        
+    });
+
       movieCard.appendChild(moviePoster)
       movieCard.appendChild(movieRating)
       movieCard.appendChild(movieTitle);
       movieCard.appendChild(movieDate);
+      movieCard.appendChild(favouriteButton);
       movieResults.appendChild(movieCard)
     });
   }
