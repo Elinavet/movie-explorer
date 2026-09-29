@@ -23,6 +23,15 @@ class Movie {
   getRating() {
     return `⭐ ${this.rating.toFixed(1)}`
   }
+  static fromApiData(data){
+    return new Movie(
+      data.id,
+      data.title,
+      data.release_date,
+      data.vote_average,
+      data.poster_path
+    )
+  }
 }
 
 
@@ -32,29 +41,42 @@ const movieResults = document.getElementById("movie-results")
 const movieDetails = document.getElementById("movie-details")
 const favouritesButton = document.getElementById("favourites-button")
 let favourites = [];
+let showingFavourites = false;
 
 const savedFavourites = localStorage.getItem("favourites");
 if (savedFavourites !== null) {
-  favourites = JSON.parse(savedFavourites);
-}
-
-favouritesButton.addEventListener("click", () => {
-  movieResults.innerHTML = "";
-  if (favourites.length === 0) {
-    movieResults.innerText = "No favourite movies yet.";
-    return;
-}
-
-  favourites.forEach((movie) => {
-    const myMovie = new Movie(
+  const parsedFavourites = JSON.parse(savedFavourites);
+  favourites = parsedFavourites.map(movie => {
+    return new Movie(
       movie.id,
       movie.title,
       movie.releaseDate,
       movie.rating,
       movie.posterPath
     );
-    renderMovieCard(myMovie, true);
   });
+
+}
+
+favouritesButton.addEventListener("click", () => {
+  if(showingFavourites){
+    showingFavourites = false;
+    getTopRatedMovies()
+  }else{
+    showingFavourites = true;
+    movieDetails.style.display = "none";
+    movieResults.style.display = "grid";
+    movieResults.innerHTML = "";
+    if (favourites.length === 0) {
+      movieResults.innerText = "No favourite movies yet.";
+      return;
+  }
+  
+    favourites.forEach((movie) => {
+      renderMovieCard(movie, true);
+    });
+  }
+
 });
 
 
@@ -65,6 +87,9 @@ searchForm.addEventListener("submit", (event) => {
     movieResults.innerText = "Please enter a movie title."
     return
   }
+  showingFavourites = false;
+  movieDetails.style.display = "none";
+  movieResults.style.display = "grid";
   movieResults.innerText = "Searching...";
   searchMovies(query)
 })
@@ -90,15 +115,9 @@ const searchMovies = async (query)=>{
     movieResults.innerText = "No movies found.";
   } else {
     data.results.forEach(movie => {
-      const myMovie = new Movie(
-        movie.id,
-        movie.title,
-        movie.release_date,
-        movie.vote_average,
-        movie.poster_path
-    );  
+      const myMovie = Movie.fromApiData(movie);
     renderMovieCard(myMovie)  
-    });
+    });  
   }
   }catch(error){
     console.error(error);
@@ -106,9 +125,34 @@ const searchMovies = async (query)=>{
   }  
 }
 
+const getTopRatedMovies = async () => {
+  try{
+    const response = await fetch('https://api.themoviedb.org/3/movie/top_rated', {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${API_TOKEN}`
+      }
+    })
+    if(!response.ok){
+      movieResults.innerText = "Something went wrong."
+      return
+    }
+    const data = await response.json()
+    movieResults.innerHTML = "";
+    data.results.forEach(movie => {
+      const myMovie = Movie.fromApiData(movie);
+      renderMovieCard(myMovie)  
+    }); 
+  }catch(error){
+    console.error(error);
+    movieResults.innerText = "Something went wrong.";
+  }
+}
+
 const renderMovieCard =(myMovie, isFavouritesView = false)=>{
   const movieCard = document.createElement("div");
   movieCard.addEventListener("click", () => {
+    showingFavourites = false;
     getMovieDetails(myMovie.id)
   })
   const movieTitle = document.createElement("h2");
@@ -147,7 +191,7 @@ const renderMovieCard =(myMovie, isFavouritesView = false)=>{
             movieCard.remove();
             if (favourites.length === 0) {
               movieResults.innerText = "No favourite movies yet.";
-              return;}
+            }
           }
         }
         localStorage.setItem("favourites", JSON.stringify(favourites));
@@ -170,7 +214,14 @@ const getMovieDetails = async (movieId)=>{
         Authorization: `Bearer ${API_TOKEN}`
       }
     })
+    if (!response.ok) {
+      movieResults.style.display = "none";
+      movieDetails.style.display = "block";
+      movieDetails.innerText = "Something went wrong.";
+      return;
+    }
     const data = await response.json()
+    const myMovie = Movie.fromApiData(data);
     movieResults.style.display = "none";
     movieDetails.style.display = "block";
 
@@ -192,31 +243,32 @@ const getMovieDetails = async (movieId)=>{
     detailsTitle.innerText = data.title
 
     const detailsOverview = document.createElement("p");
-    detailsOverview.innerText = data.overview
-    if(data.overview === ""){
-      detailsOverview.innerText = "No overview available."
-    }else{
-      detailsOverview.innerText = data.overview
-    }
+    
+    detailsOverview.innerText = !data.overview
+    ? "No overview available."
+    : data.overview;
 
     const detailsRuntime = document.createElement("p")
-    detailsRuntime.innerText = `Runtime: ${data.runtime} minutes`
+    detailsRuntime.innerText = !data.runtime
+    ? "No runtime available."
+    : `Runtime: ${data.runtime} minutes`
 
     const detailsGenres = document.createElement("p")
-    detailsGenres.innerText = `Genres: ${data.genres.map(genre => genre.name).join(", ")}`
+    detailsGenres.innerText = data.genres.length === 0
+    ?"No genres available."
+    :`Genres: ${data.genres.map(genre => genre.name).join(", ")}`
 
     const detailsRating = document.createElement("p")
-    detailsRating.innerText = `⭐${data.vote_average.toFixed(1)}/10`
+    detailsRating.innerText = `Rating: ${myMovie.getRating()}/10`
 
     const detailsLanguage = document.createElement("p")
     detailsLanguage.innerText = `Language: ${data.original_language}`
 
+    const detailsYear = document.createElement("p")
+    detailsYear.innerText = `Year: ${myMovie.getYear()}`
+
     const detailsPoster = document.createElement("img");
-    if (data.poster_path !== null) {
-      detailsPoster.src = `https://image.tmdb.org/t/p/w500${data.poster_path}`;  
-    }else{
-      detailsPoster.src = ".//images/img placeholder.png"
-    }
+    detailsPoster.src = myMovie.getPosterUrl();
     
     movieDetails.appendChild(backButton)
     movieDetails.appendChild(detailsContent)
@@ -228,8 +280,14 @@ const getMovieDetails = async (movieId)=>{
     detailsInfo.appendChild(detailsGenres)
     detailsInfo.appendChild(detailsRating)
     detailsInfo.appendChild(detailsLanguage)
+    detailsInfo.appendChild(detailsYear)
   }catch(error){
-    console.log(error)
+    console.error(error)
+    movieResults.style.display = "none";
+    movieDetails.style.display = "block";
+    movieDetails.innerText = "Something went wrong.";
   }
 }
+
+getTopRatedMovies();
 
