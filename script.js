@@ -40,8 +40,11 @@ const searchInput = document.getElementById("search-input")
 const movieResults = document.getElementById("movie-results")
 const movieDetails = document.getElementById("movie-details")
 const favouritesButton = document.getElementById("favourites-button")
+const sortMovies = document.getElementById("sort-movies");
 let favourites = [];
 let showingFavourites = false;
+let currentMovies = [];
+let originalMovies = [];
 
 const savedFavourites = localStorage.getItem("favourites");
 if (savedFavourites !== null) {
@@ -61,9 +64,11 @@ if (savedFavourites !== null) {
 favouritesButton.addEventListener("click", () => {
   if(showingFavourites){
     showingFavourites = false;
+    sortMovies.value = "default";
     getTopRatedMovies()
   }else{
     showingFavourites = true;
+    sortMovies.value = "default";
     movieDetails.style.display = "none";
     movieResults.style.display = "grid";
     movieResults.innerHTML = "";
@@ -94,6 +99,55 @@ searchForm.addEventListener("submit", (event) => {
   searchMovies(query)
 })
 
+sortMovies.addEventListener("change", () => {
+  const sortValue = sortMovies.value;
+  let moviesToSort;
+
+  if (showingFavourites) {
+    moviesToSort = [...favourites];
+  } else {
+    moviesToSort = currentMovies;
+  }
+
+  if (sortValue === "default") {
+    if (showingFavourites) {
+      moviesToSort = [...favourites];
+    } else {
+      currentMovies = [...originalMovies];
+      moviesToSort = currentMovies;
+    }
+  
+  }else if (sortValue === "rating-high") {
+    moviesToSort.sort((a, b) => b.rating - a.rating);
+  }else if(sortValue === "rating-low"){
+    moviesToSort.sort((a, b)=> a.rating - b.rating);
+  }else if(sortValue === "newest"){
+    moviesToSort.sort((a, b) => {
+      if (a.releaseDate === "") return 1;
+      if (b.releaseDate === "") return -1;
+      const dateA = new Date(a.releaseDate);
+      const dateB = new Date(b.releaseDate);
+      return dateB - dateA;
+    });
+  }else if(sortValue === "oldest"){
+    moviesToSort.sort((a, b) => {
+      if (a.releaseDate === "") return 1;
+      if (b.releaseDate === "") return -1;
+      const dateA = new Date(a.releaseDate);
+      const dateB = new Date(b.releaseDate);
+      return dateA - dateB;
+    });
+  }
+  movieResults.innerHTML = "";
+  if (showingFavourites) {
+    moviesToSort.forEach(movie => {
+      renderMovieCard(movie, true);
+    });
+  } else {
+    renderMovies();
+  }
+});
+
 const searchMovies = async (query)=>{
   try{
     const response = await fetch(`https://api.themoviedb.org/3/search/movie?query=${query}`,{
@@ -110,20 +164,28 @@ const searchMovies = async (query)=>{
 
   const data = await response.json()
   movieResults.innerHTML = "";
+  sortMovies.value = "default";
 
   if (data.results.length === 0) {
     movieResults.innerText = "No movies found.";
   } else {
-    data.results.forEach(movie => {
-      const myMovie = Movie.fromApiData(movie);
-    renderMovieCard(myMovie)  
-    });  
+    currentMovies = data.results.map(movie => {
+      return Movie.fromApiData(movie);
+    });
+    originalMovies = [...currentMovies];
   }
-  }catch(error){
-    console.error(error);
-    movieResults.innerText = "Something went wrong.";
-  }  
+}catch(error){
+  console.error(error);
+  movieResults.innerText = "Something went wrong.";
+}  
+renderMovies();
 }
+
+const renderMovies = () => {
+  currentMovies.forEach(movie => {
+    renderMovieCard(movie);
+  });
+};
 
 const getTopRatedMovies = async () => {
   try{
@@ -139,14 +201,16 @@ const getTopRatedMovies = async () => {
     }
     const data = await response.json()
     movieResults.innerHTML = "";
-    data.results.forEach(movie => {
-      const myMovie = Movie.fromApiData(movie);
-      renderMovieCard(myMovie)  
+    sortMovies.value = "default";
+    currentMovies = data.results.map(movie => {
+      return Movie.fromApiData(movie); 
     }); 
+    originalMovies = [...currentMovies];
   }catch(error){
     console.error(error);
     movieResults.innerText = "Something went wrong.";
   }
+  renderMovies();
 }
 
 const renderMovieCard =(myMovie, isFavouritesView = false)=>{
