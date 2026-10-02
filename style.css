@@ -94,3 +94,17 @@ button {
   gap: 12px;
   font-size: 18px;
 }
+
+#favourites-button{
+  margin-left: 15px;
+  padding: 5px;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+#sort-movies{
+  margin-left: 20px;
+  padding: 5px;
+  font-size: 15px;
+  cursor: pointer;
+}
