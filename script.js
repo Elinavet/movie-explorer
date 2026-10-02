@@ -41,10 +41,14 @@ const movieResults = document.getElementById("movie-results")
 const movieDetails = document.getElementById("movie-details")
 const favouritesButton = document.getElementById("favourites-button")
 const sortMovies = document.getElementById("sort-movies");
+const loadMoreButton = document.getElementById("load-more");
+
 let favourites = [];
 let showingFavourites = false;
 let currentMovies = [];
 let originalMovies = [];
+let currentPage = 1;
+let currentQuery = "";
 
 const savedFavourites = localStorage.getItem("favourites");
 if (savedFavourites !== null) {
@@ -68,6 +72,7 @@ favouritesButton.addEventListener("click", () => {
     getTopRatedMovies()
   }else{
     showingFavourites = true;
+    loadMoreButton.style.display = "none";
     sortMovies.value = "default";
     movieDetails.style.display = "none";
     movieResults.style.display = "grid";
@@ -75,7 +80,7 @@ favouritesButton.addEventListener("click", () => {
     if (favourites.length === 0) {
       movieResults.innerText = "No favourite movies yet.";
       return;
-  }
+    }
   
     favourites.forEach((movie) => {
       renderMovieCard(movie, true);
@@ -92,6 +97,8 @@ searchForm.addEventListener("submit", (event) => {
     movieResults.innerText = "Please enter a movie title."
     return
   }
+  currentQuery = query;
+  currentPage = 1;
   showingFavourites = false;
   movieDetails.style.display = "none";
   movieResults.style.display = "grid";
@@ -148,9 +155,14 @@ sortMovies.addEventListener("change", () => {
   }
 });
 
+loadMoreButton.addEventListener("click", () => {
+  currentPage++;
+  searchMovies(currentQuery);
+});
+
 const searchMovies = async (query)=>{
   try{
-    const response = await fetch(`https://api.themoviedb.org/3/search/movie?query=${query}`,{
+    const response = await fetch(`https://api.themoviedb.org/3/search/movie?query=${query}&page=${currentPage}`,{
     method: "GET",
     headers: {
       Authorization: `Bearer ${API_TOKEN}`
@@ -163,22 +175,42 @@ const searchMovies = async (query)=>{
 
 
   const data = await response.json()
-  movieResults.innerHTML = "";
-  sortMovies.value = "default";
+  if (currentPage >= data.total_pages) {
+    loadMoreButton.style.display = "none";
+  } else {
+    loadMoreButton.style.display = "block";
+  }
+  if (currentPage === 1) {
+    movieResults.innerHTML = "";
+  }
+
+  if (currentPage === 1) {
+    sortMovies.value = "default";
+  }
 
   if (data.results.length === 0) {
     movieResults.innerText = "No movies found.";
   } else {
-    currentMovies = data.results.map(movie => {
+    const newMovies = data.results.map(movie => {
       return Movie.fromApiData(movie);
     });
+    if (currentPage === 1) {
+      currentMovies = [...newMovies];
+    } else {
+      currentMovies.push(...newMovies);
+    }
+
     originalMovies = [...currentMovies];
+    if (currentPage === 1) {
+      renderMovies();
+    } else {
+      sortMovies.dispatchEvent(new Event("change"));
+    }
   }
-}catch(error){
-  console.error(error);
-  movieResults.innerText = "Something went wrong.";
-}  
-renderMovies();
+  }catch(error){
+    console.error(error);
+    movieResults.innerText = "Something went wrong.";
+  }  
 }
 
 const renderMovies = () => {
@@ -210,6 +242,7 @@ const getTopRatedMovies = async () => {
     console.error(error);
     movieResults.innerText = "Something went wrong.";
   }
+  loadMoreButton.style.display = "none";
   renderMovies();
 }
 
@@ -351,6 +384,7 @@ const getMovieDetails = async (movieId)=>{
     movieDetails.style.display = "block";
     movieDetails.innerText = "Something went wrong.";
   }
+  loadMoreButton.style.display = "none";
 }
 
 getTopRatedMovies();
