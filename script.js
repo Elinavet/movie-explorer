@@ -146,6 +146,14 @@ sortMovies.addEventListener("change", () => {
     });
   }
   movieResults.innerHTML = "";
+  if (moviesToSort.length === 0) {
+    if (showingFavourites) {
+      movieResults.innerText = "No favourite movies yet.";
+    } else {
+      movieResults.innerText = "No movies found.";
+    }
+    return;
+  }
   if (showingFavourites) {
     moviesToSort.forEach(movie => {
       renderMovieCard(movie, true);
@@ -189,6 +197,8 @@ const searchMovies = async (query)=>{
   }
 
   if (data.results.length === 0) {
+    currentMovies = [];
+    originalMovies = [];
     movieResults.innerText = "No movies found.";
   } else {
     const newMovies = data.results.map(movie => {
@@ -249,7 +259,6 @@ const getTopRatedMovies = async () => {
 const renderMovieCard =(myMovie, isFavouritesView = false)=>{
   const movieCard = document.createElement("div");
   movieCard.addEventListener("click", () => {
-    showingFavourites = false;
     getMovieDetails(myMovie.id)
   })
   const movieTitle = document.createElement("h2");
